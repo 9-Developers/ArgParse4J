@@ -1,0 +1,1 @@
+rootProject.name = "ArgParse4J"
