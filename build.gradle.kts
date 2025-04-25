@@ -25,7 +25,7 @@ dependencies {
 
     testImplementation(libs.logback.classic)
     testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.bundles.junit)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 

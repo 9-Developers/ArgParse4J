@@ -63,13 +63,9 @@
         <module name="EqualsAvoidNull"/>
         <module name="EqualsHashCode"/>
         <module name="FinalLocalVariable"/>
-        <module name="HiddenField">
-            <property name="ignoreConstructorParameter" value="true"/>
-        </module>
         <module name="IllegalThrows"/>
         <module name="IllegalType"/>
         <module name="InnerAssignment"/>
-        <module name="ModifiedControlVariable"/>
         <module name="MultipleVariableDeclarations"/>
         <module name="NoFinalizer"/>
         <module name="OneStatementPerLine"/>
@@ -78,7 +74,6 @@
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
         <module name="StringLiteralEquality"/>
-        <module name="UnnecessaryParentheses"/>
         <module name="UnnecessarySemicolonAfterOuterTypeDeclaration"/>
         <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>
         <module name="UnnecessarySemicolonInEnumeration"/>
@@ -109,7 +104,6 @@
         <module name="MissingJavadocType"/>
         <module name="NonEmptyAtclauseDescription"/>
         <module name="RequireEmptyLineBeforeBlockTagGroup"/>
-        <module name="SummaryJavadoc"/>
 
         <!-- https://checkstyle.org/checks/misc/index.html -->
         <module name="ArrayTypeStyle"/>
