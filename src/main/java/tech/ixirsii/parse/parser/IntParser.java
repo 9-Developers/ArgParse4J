@@ -1,6 +1,7 @@
 package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link Parser} for integer values.
@@ -8,6 +9,7 @@ import lombok.NonNull;
  * @author Ryan Porterfield
  * @since 1.0.0
  */
+@Slf4j
 public final class IntParser implements Parser<Integer> {
     /**
      * Hide constructor.
@@ -17,6 +19,8 @@ public final class IntParser implements Parser<Integer> {
 
     @Override
     public ParseResult<Integer> parse(@NonNull final String value) {
+        log.trace("Parsing {} as int", value);
+
         try {
             return new ParseResult<>(Integer.parseInt(value), true, "");
         } catch (final NumberFormatException e) {

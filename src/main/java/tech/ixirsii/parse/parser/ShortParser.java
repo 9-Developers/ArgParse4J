@@ -1,6 +1,7 @@
 package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link Parser} for short values.
@@ -8,6 +9,7 @@ import lombok.NonNull;
  * @author Ryan Porterfield
  * @since 1.0.0
  */
+@Slf4j
 public final class ShortParser implements Parser<Short> {
     /**
      * Hide constructor.
@@ -17,6 +19,8 @@ public final class ShortParser implements Parser<Short> {
 
     @Override
     public ParseResult<Short> parse(@NonNull final String value) {
+        log.trace("Parsing {} as short", value);
+
         try {
             return new ParseResult<>(Short.parseShort(value), true, "");
         } catch (final NumberFormatException e) {

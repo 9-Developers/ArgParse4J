@@ -1,9 +1,9 @@
-package tech.ixirsii.parse.event;
+package tech.ixirsii.parse.internal;
 
 import lombok.NonNull;
 
 /**
- * Argument event.
+ * Argument internal.
  *
  * @author Ryan Porterfield
  * @param name Optional name of argument or empty string.

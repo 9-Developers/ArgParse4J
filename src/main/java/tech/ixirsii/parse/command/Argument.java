@@ -4,7 +4,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import tech.ixirsii.parse.event.ArgumentEvent;
+import lombok.extern.slf4j.Slf4j;
+import tech.ixirsii.parse.internal.ArgumentEvent;
 import tech.ixirsii.parse.parser.ParseResult;
 import tech.ixirsii.parse.parser.Parser;
 
@@ -16,6 +17,7 @@ import tech.ixirsii.parse.parser.Parser;
  * @since 1.0.0
  */
 @RequiredArgsConstructor
+@Slf4j
 public abstract sealed class Argument<T> implements Comparable<Argument<T>>
         permits OptionalArgument, PositionalArgument {
     /**
@@ -73,6 +75,8 @@ public abstract sealed class Argument<T> implements Comparable<Argument<T>>
     protected String getSpace(final int length) {
         final int spaceLength = COLUMN_WIDTH - length;
 
+        log.trace("Getting space {}", spaceLength);
+
         if (spaceLength < 2) {
             // Always return at least 1 space
             return " ";
@@ -86,14 +90,18 @@ public abstract sealed class Argument<T> implements Comparable<Argument<T>>
      *
      * @param name  Optional argument name if passed.
      * @param value Argument value.
-     * @return New argument event.
+     * @return New argument internal.
      */
     protected ArgumentEvent<T> parse(@NonNull final String name, @NonNull final String value) {
+        log.trace("Parsing {}={}", name, value);
+
         final ParseResult<T> result = parser.parse(value);
 
         if (result.isSuccess()) {
+            log.debug("Parsed {}={}", name, value);
             return new ArgumentEvent<>(name, value, result.value(), true, "");
         } else {
+            log.error("Failed to parse {}={}", name, value);
             return new ArgumentEvent<>(name, value, null, false, result.errorMessage());
         }
     }

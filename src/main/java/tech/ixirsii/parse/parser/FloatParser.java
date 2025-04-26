@@ -1,6 +1,7 @@
 package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link Parser} for float values.
@@ -8,6 +9,7 @@ import lombok.NonNull;
  * @author Ryan Porterfield
  * @since 1.0.0
  */
+@Slf4j
 public final class FloatParser implements Parser<Float> {
     /**
      * Hide constructor.
@@ -17,6 +19,8 @@ public final class FloatParser implements Parser<Float> {
 
     @Override
     public ParseResult<Float> parse(@NonNull final String value) {
+        log.trace("Parsing {} as flaot", value);
+
         try {
             return new ParseResult<>(Float.parseFloat(value), true, "");
         } catch (final NumberFormatException e) {

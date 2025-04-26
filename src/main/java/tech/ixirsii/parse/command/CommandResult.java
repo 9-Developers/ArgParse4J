@@ -7,7 +7,7 @@ import tech.ixirsii.parse.event.CommandEvent;
  * Command result.
  *
  * @author Ryan Porterfield
- * @param event Command event.
+ * @param event Command internal.
  * @param isSuccess Was the command successful?
  * @param errorMessage Error message if the command was not successful, otherwise empty string.
  * @since 1.0.0

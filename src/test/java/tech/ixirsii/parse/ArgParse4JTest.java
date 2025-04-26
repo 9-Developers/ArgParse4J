@@ -16,15 +16,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
  * Test cases.
  *
- * **Example:**
+ * Example:
  *   `command -flags --option1 value1 option2=value2 argument3 "value 3" argument4=value4,"value,5" value6`
- * **Where:**
+ * Where:
  *   `-flags` are the POSIX short options `-f -l -a -g -s`
  *   `--option1 value1` is the GNU long option `option1` with the value `value1`
  *   `option2=value2` is a named option `option2` with the value `value2`
@@ -32,8 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   `argument4=value4,"value,5"` is a named positional argument list containing the values [`value4`, `value,5`]
  *   `value6` is a positional argument with the value `value6`
  *
- * **Example:**
+ * Example:
  *   `command value2 argument1=value1`
+ * Where:
+ *   `value2` is the 2nd positional argument with the value `value2`
+ *   `argument1=value1` is the 1st positional argument `argument1` with the value `value1`
  */
 class ArgParse4JTest {
     private final Command command;
@@ -141,19 +143,21 @@ class ArgParse4JTest {
     }
 
     @Test
-    void GIVEN_emptyParameters_WHEN_parse_THEN_throwsIllegalArgumentException() {
+    void GIVEN_emptyParameters_WHEN_parse_THEN_returnsFailedResult() {
         // Given
         final String expected = """
-                argumentBoolean is missing but is required
-                argumentByte is missing but is required
-                argumentChar is missing but is required
-                argumentDouble is missing but is required
-                argumentFloat is missing but is required
-                argumentInt is missing but is required
-                argumentList is missing but is required
-                argumentLong is missing but is required
-                argumentShort is missing but is required
-                argumentString is missing but is required""";
+                {
+                    argumentBoolean is missing but is required
+                    argumentByte is missing but is required
+                    argumentChar is missing but is required
+                    argumentDouble is missing but is required
+                    argumentFloat is missing but is required
+                    argumentInt is missing but is required
+                    argumentList is missing but is required
+                    argumentLong is missing but is required
+                    argumentShort is missing but is required
+                    argumentString is missing but is required
+                }""";
 
         // When
         final CommandResult actual = command.parse(Collections.emptyList());
@@ -162,21 +166,31 @@ class ArgParse4JTest {
         assertFalse(actual.isSuccess(), "Result should not be success");
         assertEquals(expected, actual.errorMessage(), "Error message should equal expected");
     }
-    
+
     @Test
     void GIVEN_shortOptionsList_WHEN_parse_THEN_returnsEvent() {
         // Given
         final List<String> arguments = List.of(
-                "-b true",
-                "-B 8",
-                "-c C",
-                "-d 8.8",
-                "-f 8.8",
-                "-i 8",
-                "-l value1,value2",
-                "-L 8",
-                "-s 8",
-                "-S String",
+                "-b",
+                "true",
+                "-B",
+                "8",
+                "-c",
+                "C",
+                "-d",
+                "8.8",
+                "-f",
+                "8.8",
+                "-i",
+                "8",
+                "-l",
+                "value1,value2",
+                "-L",
+                "8",
+                "-s",
+                "8",
+                "-S",
+                "String",
                 "true",
                 "8",
                 "C",
@@ -187,32 +201,44 @@ class ArgParse4JTest {
                 "8",
                 "8",
                 "String");
-        
+
         // When
         final CommandResult actual = command.parse(arguments);
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertTrue(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertTrue(actual.event().get("optionBoolean"), "optionBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("optionByte"), "optionByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("optionChar"), "optionChar should equal expected");
-        assertEquals(8.8, actual.event().get("optionDouble"), "optionDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("optionFloat"), "optionFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("optionInt"), "optionInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("optionList"), "optionList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("optionLong"), "optionLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("optionShort"), "optionShort should equal expected");
-        assertEquals("String", actual.event().get("optionString"), "optionString should equal expected");
+        assertTrue(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertTrue(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("optionByte", Byte.class), "optionByte should equal expected");
+        assertEquals('C', actual.event().get("optionChar", Character.class), "optionChar should equal expected");
+        assertEquals(8.8, actual.event().get("optionDouble", Double.class), "optionDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("optionFloat", Float.class), "optionFloat should equal expected");
+        assertEquals(8, actual.event().get("optionInt", Integer.class), "optionInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("optionList", String.class),
+                "optionList should equal expected");
+        assertEquals(8L, actual.event().get("optionLong", Long.class), "optionLong should equal expected");
+        assertEquals((short) 8, actual.event().get("optionShort", Short.class), "optionShort should equal expected");
+        assertEquals("String", actual.event().get("optionString", String.class), "optionString should equal expected");
     }
 
     @Test
@@ -236,42 +262,61 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertTrue(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertTrue(actual.event().get("optionBoolean"), "optionBoolean should equal expected");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertTrue(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertTrue(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should equal expected");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @Test
     void GIVEN_longOptionsWithSpaceList_WHEN_parse_THEN_returnsEvent() {
         // Given
         final List<String> arguments = List.of(
-                "--optionBoolean true",
-                "--optionByte 8",
-                "--optionCharacter C",
-                "--optionDouble 8.8",
-                "--optionFloat 8.8",
-                "--optionInt 8",
-                "--optionList value1,value2",
-                "--optionLong 8",
-                "--optionShort 8",
-                "--optionString String",
+                "--optionBoolean",
+                "true",
+                "--optionByte",
+                "8",
+                "--optionCharacter",
+                "C",
+                "--optionDouble",
+                "8.8",
+                "--optionFloat",
+                "8.8",
+                "--optionInt",
+                "8",
+                "--optionList",
+                "value1,value2",
+                "--optionLong",
+                "8",
+                "--optionShort",
+                "8",
+                "--optionString",
+                "String",
                 "true",
                 "8",
                 "C",
@@ -288,26 +333,38 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertTrue(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertTrue(actual.event().get("optionBoolean"), "optionBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("optionByte"), "optionByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("optionChar"), "optionChar should equal expected");
-        assertEquals(8.8, actual.event().get("optionDouble"), "optionDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("optionFloat"), "optionFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("optionInt"), "optionInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("optionList"), "optionList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("optionLong"), "optionLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("optionShort"), "optionShort should equal expected");
-        assertEquals("String", actual.event().get("optionString"), "optionString should equal expected");
+        assertTrue(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertTrue(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("optionByte", Byte.class), "optionByte should equal expected");
+        assertEquals('C', actual.event().get("optionChar", Character.class), "optionChar should equal expected");
+        assertEquals(8.8, actual.event().get("optionDouble", Double.class), "optionDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("optionFloat", Float.class), "optionFloat should equal expected");
+        assertEquals(8, actual.event().get("optionInt", Integer.class), "optionInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("optionList", String.class),
+                "optionList should equal expected");
+        assertEquals(8L, actual.event().get("optionLong", Long.class), "optionLong should equal expected");
+        assertEquals((short) 8, actual.event().get("optionShort", Short.class), "optionShort should equal expected");
+        assertEquals("String", actual.event().get("optionString", String.class), "optionString should equal expected");
     }
 
     @Test
@@ -340,26 +397,38 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertTrue(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertTrue(actual.event().get("optionBoolean"), "optionBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("optionByte"), "optionByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("optionChar"), "optionChar should equal expected");
-        assertEquals(8.8, actual.event().get("optionDouble"), "optionDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Double>get("optionFloat"), "optionFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("optionInt"), "optionInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("optionList"), "optionList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("optionLong"), "optionLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("optionShort"), "optionShort should equal expected");
-        assertEquals("String", actual.event().get("optionString"), "optionString should equal expected");
+        assertTrue(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertTrue(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("optionByte", Byte.class), "optionByte should equal expected");
+        assertEquals('C', actual.event().get("optionChar", Character.class), "optionChar should equal expected");
+        assertEquals(8.8, actual.event().get("optionDouble", Double.class), "optionDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("optionFloat", Float.class), "optionFloat should equal expected");
+        assertEquals(8, actual.event().get("optionInt", Integer.class), "optionInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("optionList", String.class),
+                "optionList should equal expected");
+        assertEquals(8L, actual.event().get("optionLong", Long.class), "optionLong should equal expected");
+        assertEquals((short) 8, actual.event().get("optionShort", Short.class), "optionShort should equal expected");
+        assertEquals("String", actual.event().get("optionString", String.class), "optionString should equal expected");
     }
 
     @Test
@@ -383,30 +452,39 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertTrue(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertTrue(actual.event().get("optionBoolean"), "optionBoolean should equal expected");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertTrue(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertTrue(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should equal expected");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"t", "true", "y", "yes"})
+    @ValueSource(strings = { "t", "true", "y", "yes" })
     void GIVEN_trueList_WHEN_parse_THEN_returnsTrue(final String parameter) {
         // Given
         final List<String> arguments = List.of(
@@ -426,30 +504,39 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertTrue(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertNull(actual.event().get("optionBoolean"), "optionBoolean should be null");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertTrue(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertNull(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should be null");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"f", "false", "n", "no"})
+    @ValueSource(strings = { "f", "false", "n", "no" })
     void GIVEN_falseList_WHEN_parse_THEN_returnsFalse(final String parameter) {
         // Given
         final List<String> arguments = List.of(
@@ -469,26 +556,35 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertFalse(actual.event().get("argumentBoolean"), "argumentBoolean should be false");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertNull(actual.event().get("optionBoolean"), "optionBoolean should be null");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertFalse(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should be false");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertNull(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should be null");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @Test
@@ -511,26 +607,35 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertFalse(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("abc'` ,=cba", actual.event().get("argumentString"), "argumentString should be abc cba");
-        assertNull(actual.event().get("optionBoolean"), "optionBoolean should be null");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertFalse(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "abc'` ,=cba",
+                actual.event().get("argumentString", String.class),
+                "argumentString should be abc cba");
+        assertNull(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should be null");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @Test
@@ -553,26 +658,35 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertFalse(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("abc\"` ,=cba", actual.event().get("argumentString"), "argumentString should be abc cba");
-        assertNull(actual.event().get("optionBoolean"), "optionBoolean should be null");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertFalse(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "abc\"` ,=cba",
+                actual.event().get("argumentString", String.class),
+                "argumentString should be abc cba");
+        assertNull(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should be null");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @Test
@@ -595,26 +709,35 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertFalse(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("abc'` ,=cba", actual.event().get("argumentString"), "argumentString should be abc cba");
-        assertNull(actual.event().get("optionBoolean"), "optionBoolean should be null");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertFalse(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "abc'` ,=cba",
+                actual.event().get("argumentString", String.class),
+                "argumentString should be abc cba");
+        assertNull(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should be null");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @Test
@@ -637,29 +760,35 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertFalse(actual.event().get("argumentBoolean"), "argumentBoolean should be false");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
+        assertFalse(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should be false");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
         assertEquals(
                 List.of("value1", "value2", "value'` ,=3", "value\"` ,=4", "value\"' ,=5"),
-                actual.event().get("argumentList"),
+                actual.event().getList("argumentList", String.class),
                 "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertNull(actual.event().get("optionBoolean"), "optionBoolean should be null");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertNull(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should be null");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @Test
@@ -682,26 +811,35 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertTrue(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertNull(actual.event().get("optionBoolean"), "optionBoolean should be null");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertTrue(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertNull(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should be null");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 
     @Test
@@ -724,25 +862,34 @@ class ArgParse4JTest {
 
         // Then
         assertTrue(actual.isSuccess(), "Result should be success");
-        assertTrue(actual.event().get("argumentBoolean"), "argumentBoolean should equal expected");
-        assertEquals((byte) 8, actual.event().<Byte>get("argumentByte"), "argumentByte should equal expected");
-        assertEquals('C', actual.event().<Character>get("argumentChar"), "argumentChar should equal expected");
-        assertEquals(8.8, actual.event().get("argumentDouble"), "argumentDouble should equal expected");
-        assertEquals(8.8f, actual.event().<Float>get("argumentFloat"), "argumentFloat should equal expected");
-        assertEquals(8, actual.event().<Integer>get("argumentInt"), "argumentInt should equal expected");
-        assertEquals(List.of("value1", "value2"), actual.event().get("argumentList"), "argumentList should equal expected");
-        assertEquals(8L, actual.event().<Long>get("argumentLong"), "argumentLong should equal expected");
-        assertEquals((short) 8, actual.event().<Short>get("argumentShort"), "argumentShort should equal expected");
-        assertEquals("String", actual.event().get("argumentString"), "argumentString should equal expected");
-        assertNull(actual.event().get("optionBoolean"), "optionBoolean should be null");
-        assertNull(actual.event().get("optionByte"), "optionByte should be null");
-        assertNull(actual.event().get("optionChar"), "optionChar should be null");
-        assertNull(actual.event().get("optionDouble"), "optionDouble should be null");
-        assertNull(actual.event().get("optionFloat"), "optionFloat should be null");
-        assertNull(actual.event().get("optionInt"), "optionInt should be null");
-        assertNull(actual.event().get("optionList"), "optionList should be null");
-        assertNull(actual.event().get("optionLong"), "optionLong should be null");
-        assertNull(actual.event().get("optionShort"), "optionShort should be null");
-        assertNull(actual.event().get("optionString"), "optionString should be null");
+        assertTrue(actual.event().get("argumentBoolean", Boolean.class), "argumentBoolean should equal expected");
+        assertEquals((byte) 8, actual.event().get("argumentByte", Byte.class), "argumentByte should equal expected");
+        assertEquals('C', actual.event().get("argumentChar", Character.class), "argumentChar should equal expected");
+        assertEquals(8.8, actual.event().get("argumentDouble", Double.class), "argumentDouble should equal expected");
+        assertEquals(8.8f, actual.event().get("argumentFloat", Float.class), "argumentFloat should equal expected");
+        assertEquals(8, actual.event().get("argumentInt", Integer.class), "argumentInt should equal expected");
+        assertEquals(
+                List.of("value1", "value2"),
+                actual.event().getList("argumentList", String.class),
+                "argumentList should equal expected");
+        assertEquals(8L, actual.event().get("argumentLong", Long.class), "argumentLong should equal expected");
+        assertEquals(
+                (short) 8,
+                actual.event().get("argumentShort", Short.class),
+                "argumentShort should equal expected");
+        assertEquals(
+                "String",
+                actual.event().get("argumentString", String.class),
+                "argumentString should equal expected");
+        assertNull(actual.event().get("optionBoolean", Boolean.class), "optionBoolean should be null");
+        assertNull(actual.event().get("optionByte", Byte.class), "optionByte should be null");
+        assertNull(actual.event().get("optionChar", Character.class), "optionChar should be null");
+        assertNull(actual.event().get("optionDouble", Double.class), "optionDouble should be null");
+        assertNull(actual.event().get("optionFloat", Float.class), "optionFloat should be null");
+        assertNull(actual.event().get("optionInt", Integer.class), "optionInt should be null");
+        assertNull(actual.event().getList("optionList", String.class), "optionList should be null");
+        assertNull(actual.event().get("optionLong", Long.class), "optionLong should be null");
+        assertNull(actual.event().get("optionShort", Short.class), "optionShort should be null");
+        assertNull(actual.event().get("optionString", String.class), "optionString should be null");
     }
 }

@@ -1,6 +1,7 @@
 package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link Parser} for character values.
@@ -8,6 +9,7 @@ import lombok.NonNull;
  * @author Ryan Porterfield
  * @since 1.0.0
  */
+@Slf4j
 public final class CharParser implements Parser<Character> {
     /**
      * Hide constructor.
@@ -17,6 +19,8 @@ public final class CharParser implements Parser<Character> {
 
     @Override
     public ParseResult<Character> parse(@NonNull final String value) {
+        log.trace("Parsing {} as char", value);
+
         if (value.length() != 1) {
             return new ParseResult<>(null, false, "Character required but got " + value);
         }

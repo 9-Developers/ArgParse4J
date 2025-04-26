@@ -53,7 +53,6 @@ public interface Parser<T> {
      *
      * @param value Argument value.
      * @return Parsed value.
-     * @throws IllegalArgumentException If the value can't be parsed.
      */
     ParseResult<T> parse(@NonNull String value);
 }

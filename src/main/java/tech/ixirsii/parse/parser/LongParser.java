@@ -1,6 +1,7 @@
 package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link Parser} for long values.
@@ -8,6 +9,7 @@ import lombok.NonNull;
  * @author Ryan Porterfield
  * @since 1.0.0
  */
+@Slf4j
 public final class LongParser implements Parser<Long> {
     /**
      * Hide constructor.
@@ -17,6 +19,8 @@ public final class LongParser implements Parser<Long> {
 
     @Override
     public ParseResult<Long> parse(@NonNull final String value) {
+        log.trace("Parsing {} as long", value);
+
         try {
             return new ParseResult<>(Long.parseLong(value), true, "");
         } catch (final NumberFormatException e) {

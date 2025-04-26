@@ -5,7 +5,7 @@ An advanced argument parser for Java
 ## TODO
 
 - [x] Transfer existing code over from KArgParse
-- [ ] Add logging
+- [x] Add logging
 - [ ] Implement string splitter
 - [ ] Add no-value (flag only, IE. --help) parser
 - [ ] Add date/time parsers

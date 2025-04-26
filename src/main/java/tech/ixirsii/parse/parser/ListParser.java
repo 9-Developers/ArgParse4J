@@ -2,6 +2,7 @@ package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @RequiredArgsConstructor
+@Slf4j
 public final class ListParser<T> implements Parser<List<T>> {
     /**
      * Individual parser.
@@ -22,6 +24,8 @@ public final class ListParser<T> implements Parser<List<T>> {
 
     @Override
     public ParseResult<List<T>> parse(@NonNull final String value) {
+        log.trace("Parsing {} as list", value);
+
         return new ParseResult<>(Collections.emptyList(), true, "");
     }
 }

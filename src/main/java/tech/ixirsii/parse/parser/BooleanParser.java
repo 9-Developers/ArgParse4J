@@ -1,6 +1,7 @@
 package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import java.util.List;
  * @author Ryan Porterfield
  * @since 1.0.0
  */
+@Slf4j
 public final class BooleanParser implements Parser<Boolean> {
     /**
      * Possible values for a false argument.
@@ -22,8 +24,7 @@ public final class BooleanParser implements Parser<Boolean> {
     /**
      * Valid boolean values message.
      */
-    private static final String VALID_VALUES_MSG =
-            "Valid values are false " + FALSE_VALUES + " or true " + TRUE_VALUES + ".";
+    private static final String VALID_VALUES_MSG = "Valid values are false " + FALSE_VALUES + " or true " + TRUE_VALUES;
 
     /**
      * Hide constructor.
@@ -33,6 +34,8 @@ public final class BooleanParser implements Parser<Boolean> {
 
     @Override
     public ParseResult<Boolean> parse(@NonNull final String value) {
+        log.trace("Parsing {} as boolean", value);
+
         if (value.isEmpty()) {
             // No value was passed, but the optional flag is present meaning true
             return new ParseResult<>(true, true, "");
