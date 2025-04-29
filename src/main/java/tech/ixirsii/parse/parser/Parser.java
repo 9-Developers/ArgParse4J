@@ -1,6 +1,7 @@
 package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
+import tech.ixirsii.parse.command.ArgumentValueCount;
 
 /**
  * Parser interface.
@@ -9,7 +10,6 @@ import lombok.NonNull;
  * @param <T> Parser return type.
  * @since 1.0.0
  */
-@FunctionalInterface
 public interface Parser<T> {
     /**
      * Boolean parser.
@@ -49,10 +49,19 @@ public interface Parser<T> {
     StringParser STRING_PARSER = new StringParser();
 
     /**
+     * How many arguments does this parser accept?
+     *
+     * @return Argument value count.
+     */
+    @NonNull
+    ArgumentValueCount getValueCount();
+
+    /**
      * Parse input.
      *
      * @param value Argument value.
      * @return Parsed value.
      */
+    @NonNull
     ParseResult<T> parse(@NonNull String value);
 }

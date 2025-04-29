@@ -2,6 +2,7 @@ package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import tech.ixirsii.parse.command.ArgumentValueCount;
 
 /**
  * {@link Parser} for integer values.
@@ -17,8 +18,14 @@ public final class IntParser implements Parser<Integer> {
     /* default */ IntParser() {
     }
 
+    @NonNull
     @Override
-    public ParseResult<Integer> parse(@NonNull final String value) {
+    public ArgumentValueCount getValueCount() {
+        return ArgumentValueCount.ONE;
+    }
+
+    @Override
+    public @NonNull ParseResult<Integer> parse(@NonNull final String value) {
         log.trace("Parsing {} as int", value);
 
         try {

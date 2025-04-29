@@ -2,6 +2,7 @@ package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import tech.ixirsii.parse.command.ArgumentValueCount;
 
 /**
  * {@link Parser} for double values.
@@ -17,8 +18,14 @@ public final class DoubleParser implements Parser<Double> {
     /* default */ DoubleParser() {
     }
 
+    @NonNull
     @Override
-    public ParseResult<Double> parse(@NonNull final String value) {
+    public ArgumentValueCount getValueCount() {
+        return ArgumentValueCount.ONE;
+    }
+
+    @Override
+    public @NonNull ParseResult<Double> parse(@NonNull final String value) {
         log.trace("Parsing {} as double", value);
 
         try {

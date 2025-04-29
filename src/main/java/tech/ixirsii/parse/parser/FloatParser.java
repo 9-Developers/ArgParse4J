@@ -2,6 +2,7 @@ package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import tech.ixirsii.parse.command.ArgumentValueCount;
 
 /**
  * {@link Parser} for float values.
@@ -17,8 +18,14 @@ public final class FloatParser implements Parser<Float> {
     /* default */ FloatParser() {
     }
 
+    @NonNull
     @Override
-    public ParseResult<Float> parse(@NonNull final String value) {
+    public ArgumentValueCount getValueCount() {
+        return ArgumentValueCount.ONE;
+    }
+
+    @Override
+    public @NonNull ParseResult<Float> parse(@NonNull final String value) {
         log.trace("Parsing {} as flaot", value);
 
         try {

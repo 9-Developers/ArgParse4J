@@ -2,6 +2,7 @@ package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import tech.ixirsii.parse.command.ArgumentValueCount;
 
 /**
  * {@link Parser} for string values.
@@ -17,8 +18,14 @@ public final class StringParser implements Parser<String> {
     /* default */ StringParser() {
     }
 
+    @NonNull
     @Override
-    public ParseResult<String> parse(@NonNull final String value) {
+    public ArgumentValueCount getValueCount() {
+        return ArgumentValueCount.ONE;
+    }
+
+    @Override
+    public @NonNull ParseResult<String> parse(@NonNull final String value) {
         log.trace("Parsing {} as string", value);
 
         return new ParseResult<>(value, true, "");

@@ -2,6 +2,7 @@ package tech.ixirsii.parse.parser;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import tech.ixirsii.parse.command.ArgumentValueCount;
 
 import java.util.List;
 
@@ -32,8 +33,14 @@ public final class BooleanParser implements Parser<Boolean> {
     /* default */ BooleanParser() {
     }
 
+    @NonNull
     @Override
-    public ParseResult<Boolean> parse(@NonNull final String value) {
+    public ArgumentValueCount getValueCount() {
+        return ArgumentValueCount.ZERO_OR_ONE;
+    }
+
+    @Override
+    public @NonNull ParseResult<Boolean> parse(@NonNull final String value) {
         log.trace("Parsing {} as boolean", value);
 
         if (value.isEmpty()) {
