@@ -49,7 +49,7 @@ public interface Parser<T> {
     StringParser STRING_PARSER = new StringParser();
 
     /**
-     * How many arguments does this parser accept?
+     * How many values does this parser accept?
      *
      * @return Argument value count.
      */

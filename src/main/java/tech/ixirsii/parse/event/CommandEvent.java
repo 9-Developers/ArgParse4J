@@ -46,6 +46,28 @@ public class CommandEvent {
     }
 
     /**
+     * Get parsed argument value.
+     *
+     * @param name Argument name.
+     * @param defaultValue Default value to return if {@code name} is not present.
+     * @param type Argument type.
+     * @param <T> Argument type.
+     * @return Parsed argument value or {@code null} if argument is not present.
+     * @throws ClassCastException if the argument is not of the expected type.
+     */
+    public <T> T getOrDefault(@NonNull final String name, @NonNull final T defaultValue, @NonNull final Class<T> type) {
+        log.trace("Getting {} as {} or default", name, type);
+
+        final ArgumentEvent<?> event = events.get(name);
+
+        if (event == null) {
+            return defaultValue;
+        } else {
+            return type.cast(event.parsedValue());
+        }
+    }
+
+    /**
      * Get parsed argument value list.
      *
      * @param name Argument name.

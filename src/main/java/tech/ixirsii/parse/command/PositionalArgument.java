@@ -25,8 +25,17 @@ public final class PositionalArgument<T> extends Argument<T> {
         super(about, name, parser);
     }
 
+    /* **************************************** Public override methods ***************************************** */
+
     @Override
     public String toString() {
         return getName() + getSpace(getName().length()) + getAbout();
+    }
+
+    /* *************************************** Protected override methods *************************************** */
+
+    @Override
+    protected @NonNull ArgumentValueCount getValueCount() {
+        return ArgumentValueCount.ONE;
     }
 }

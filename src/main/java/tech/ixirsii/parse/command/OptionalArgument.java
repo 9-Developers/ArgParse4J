@@ -37,11 +37,20 @@ public final class OptionalArgument<T> extends Argument<T> {
         this.shortOption = shortOption;
     }
 
+    /* **************************************** Public override methods ***************************************** */
+
     @Override
     public String toString() {
         final String option = Command.POSIX_PREFIX + shortOption + ", " + Command.GNU_PREFIX + getName();
         final String space = getSpace(option.length());
 
         return option + space + getAbout();
+    }
+
+    /* *************************************** Protected override methods *************************************** */
+
+    @Override
+    protected @NonNull ArgumentValueCount getValueCount() {
+        return getParser().getValueCount();
     }
 }

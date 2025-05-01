@@ -3,6 +3,8 @@ package tech.ixirsii.parse.command;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import tech.ixirsii.parse.internal.ArgumentEvent;
+import tech.ixirsii.parse.internal.ArgumentMatch;
+import tech.ixirsii.parse.internal.ArgumentPair;
 import tech.ixirsii.parse.internal.InternalEvent;
 import tech.ixirsii.parse.parser.Parser;
 
@@ -11,11 +13,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.SequencedMap;
-import java.util.SequencedSet;
 
 /**
  * Command class.
@@ -53,7 +53,7 @@ public final class Command {
      * Required (positional) arguments.
      */
     @NonNull
-    private final SequencedMap<String, PositionalArgument<?>> positionalArguments;
+    private final List<PositionalArgument<?>> positionalArguments;
     /**
      * POSIX short options.
      */
@@ -87,8 +87,6 @@ public final class Command {
                 Parser.BOOLEAN_PARSER);
         final SequencedMap<String, OptionalArgument<?>> longOptionMap =
                 LinkedHashMap.newLinkedHashMap(optionalArguments.size() + 1);
-        final SequencedMap<String, PositionalArgument<?>> positionalArgumentMap =
-                LinkedHashMap.newLinkedHashMap(positionalArguments.size());
         final SequencedMap<Character, OptionalArgument<?>> shortOptionMap =
                 LinkedHashMap.newLinkedHashMap(optionalArguments.size() + 1);
 
@@ -100,16 +98,66 @@ public final class Command {
             shortOptionMap.put(optionalArgument.getShortOption(), optionalArgument);
         }
 
-        for (final PositionalArgument<?> positionalArgument : positionalArguments) {
-            positionalArgumentMap.put(positionalArgument.getName(), positionalArgument);
-        }
-
         this.about = about;
         this.longOptions = Collections.unmodifiableSequencedMap(longOptionMap);
         this.name = name;
-        this.positionalArguments = Collections.unmodifiableSequencedMap(positionalArgumentMap);
+        this.positionalArguments = List.copyOf(positionalArguments);
         this.shortOptions = Collections.unmodifiableSequencedMap(shortOptionMap);
         this.usage = usage;
+    }
+
+    public CommandResult parse2(@NonNull final List<String> arguments) {
+        log.trace("Parsing arguments {}", arguments);
+
+        final InternalEvent.InternalEventBuilder builder = InternalEvent.builder();
+        final Map<Integer, List<Argument<?>>> matchedArguments = HashMap.newHashMap(arguments.size());
+
+        for (int i = 0; i < arguments.size(); ++i) {
+            final String argument = arguments.get(i);
+            final List<ArgumentMatch> argumentMatches = getArgument(argument);
+
+            if (argumentMatches.size() == 1) {
+                final ArgumentMatch argumentMatch = argumentMatches.getFirst();
+
+                if (argumentMatch.match() == null) {
+                    builder.unrecognized(argument);
+                } else {
+                    matchedArguments.put(i, Collections.singletonList(argumentMatch.match()));
+                }
+            } else if (!argumentMatches.isEmpty()) {
+                final List<Argument<?>> matchedShortOptions = new ArrayList<>(argumentMatches.size());
+
+                for (final ArgumentMatch argumentMatch : argumentMatches) {
+                    if (argumentMatch.match() == null) {
+                        builder.unrecognized(argumentMatch.argument());
+                    } else {
+                        matchedShortOptions.add(argumentMatch.match());
+                    }
+                }
+
+                matchedArguments.put(i, matchedShortOptions);
+            }
+        }
+
+        int j = 0;
+        for (int i = 0; i < arguments.size(); ++i) {
+            final String argument = arguments.get(i);
+
+            if (matchedArguments.containsKey(i)) {
+                final Argument<?> argument = matchedArguments.get(i);
+
+                if (argument.getValueCount() == ArgumentValueCount.ONE) {
+
+                }
+            } else if (j < positionalArguments.size()) {
+                final PositionalArgument<?> positionalArgument = positionalArguments.get(j);
+
+                builder.event(positionalArgument.getName(), positionalArgument.parse("", argument));
+                ++j;
+            } else {
+                builder.unrecognized(argument);
+            }
+        }
     }
 
     /**
@@ -122,82 +170,58 @@ public final class Command {
         log.trace("Parsing arguments {}", arguments);
 
         final InternalEvent.InternalEventBuilder builder = InternalEvent.builder();
-        final Map<Integer, List<Argument<?>>> argumentMap = HashMap.newHashMap(arguments.size());
-        final SequencedSet<PositionalArgument<?>> unmatchedArguments =
-                new LinkedHashSet<>(positionalArguments.values());
+        final List<ArgumentPair> argumentsWithValues = new ArrayList<>(arguments.size());
+        final List<PositionalArgument<?>> unmatchedArguments = new ArrayList<>(positionalArguments);
 
         // Build the argument map, mapping argument indices to arguments.
         for (int i = 0; i < arguments.size(); ++i) {
+            // TODO: Split argument
             final String argument = arguments.get(i);
+            final List<ArgumentMatch> argumentMatches = getArgument(argument);
 
-            if (argument.equals(GNU_PREFIX) || argument.equals(POSIX_PREFIX)) {
-                builder.unrecognized(argument);
-            } else if (argument.startsWith(GNU_PREFIX)) {
-                final String longOption = argument.substring(GNU_PREFIX.length());
-                final OptionalArgument<?> optionalArgument = longOptions.get(longOption);
-
-                if (optionalArgument == null) {
+            if (argumentMatches.isEmpty()) {
+                if (!unmatchedArguments.isEmpty()) {
+                    final Argument<?> positionalArgument = unmatchedArguments.removeFirst();
+                    argumentsWithValues.add(new ArgumentPair(positionalArgument, argument));
+                } else {
                     builder.unrecognized(argument);
-                } else {
-                    argumentMap.put(i, Collections.singletonList(optionalArgument));
                 }
-            } else if (argument.startsWith(POSIX_PREFIX)) {
-                final String flags = argument.substring(POSIX_PREFIX.length());
-                final List<Argument<?>> matchedShortOptions = new ArrayList<>(flags.length());
+            } else if (argumentMatches.size() == 1) {
+                final ArgumentMatch argumentMatch = argumentMatches.getFirst();
 
-                for (final char flag : flags.toCharArray()) {
-                    final OptionalArgument<?> optionalArgument = shortOptions.get(flag);
+                if (argumentMatch.match() != null) {
+                    final Argument<?> mappedArgument = argumentMatch.match();
 
-                    if (optionalArgument == null) {
-                        builder.unrecognized(String.valueOf(flag));
+                    if (mappedArgument.getValueCount() == ArgumentValueCount.ZERO || i >= arguments.size() - 1) {
+                        argumentsWithValues.add(new ArgumentPair(mappedArgument, ""));
+                    } else if (mappedArgument.getValueCount() == ArgumentValueCount.ZERO_OR_ONE) {
+                        // TODO: this
                     } else {
-                        matchedShortOptions.add(optionalArgument);
+                        // TODO: Split argument
+                        final String nextArgument = arguments.get(i + 1);
+                        final List<ArgumentMatch> nextArgumentMatches = getArgument(nextArgument);
+
+                        if (nextArgumentMatches.size() == 1) {
+                            final ArgumentMatch nextArgumentMatch = nextArgumentMatches.getFirst();
+
+                            if (nextArgumentMatch.match() == null) {
+                                // The next argument is actually the value for this argument, skip processing
+                                ++i;
+                                argumentsWithValues.add(new ArgumentPair(mappedArgument, nextArgument));
+                            } else {
+                                argumentsWithValues.add(new ArgumentPair(mappedArgument, ""));
+                            }
+                        }
                     }
                 }
-
-                argumentMap.put(i, matchedShortOptions);
             } else {
-                // Argument is named or positional
-                final PositionalArgument<?> positionalArgument = positionalArguments.get(argument);
-
-                if (positionalArgument != null) {
-                    argumentMap.put(i, Collections.singletonList(positionalArgument));
-                    unmatchedArguments.remove(positionalArgument);
-                }
-            }
-        }
-
-        // Parse mapped arguments
-        for (int i = 0; i < arguments.size(); ++i) {
-            final String argument = arguments.get(i);
-
-            if (argumentMap.containsKey(i)) {
-                final List<Argument<?>> mappedArguments = argumentMap.get(i);
-
-                if (mappedArguments.size() > 1) {
-                    for (final Argument<?> mappedArgument : mappedArguments) {
-                        builder.event(mappedArgument.getName(), mappedArgument.parse(argument, ""));
-                    }
-                } else {
-                    final Argument<?> mappedArgument = mappedArguments.getFirst();
-                    final String value;
-
-                    if (i + 1 >= arguments.size() || argumentMap.containsKey(i + 1)) {
-                        value = "";
+                for (final ArgumentMatch argumentMatch : argumentMatches) {
+                    if (argumentMatch.match() == null) {
+                        builder.unrecognized(argumentMatch.argument());
                     } else {
-                        // Skip processing the next argument as it's the value for this argument
-                        ++i;
-                        value = arguments.get(i);
+                        argumentsWithValues.add(new ArgumentPair(argumentMatch.match(), ""));
                     }
-
-                    builder.event(mappedArgument.getName(), mappedArgument.parse(argument, value));
                 }
-            } else if (unmatchedArguments.isEmpty()) {
-                builder.unrecognized(argument);
-            } else {
-                final Argument<?> positionalArgument = unmatchedArguments.removeFirst();
-
-                builder.event(positionalArgument.getName(), positionalArgument.parse("", argument));
             }
         }
 
@@ -246,8 +270,8 @@ public final class Command {
             }
         }
 
-        for (final String positionalArgument : positionalArguments.sequencedKeySet()) {
-            if (!events.containsKey(positionalArgument)) {
+        for (final PositionalArgument<?> positionalArgument : positionalArguments) {
+            if (!events.containsKey(positionalArgument.getName())) {
                 builder.append("    ")
                         .append(positionalArgument)
                         .append(" is missing but is required")
@@ -287,7 +311,7 @@ public final class Command {
                 .append("Arguments:")
                 .append(System.lineSeparator());
 
-        for (final PositionalArgument<?> argument : positionalArguments.sequencedValues()) {
+        for (final PositionalArgument<?> argument : positionalArguments) {
             stringBuilder.append(argument).append(System.lineSeparator());
         }
 
@@ -295,6 +319,30 @@ public final class Command {
     }
 
     /* **************************************** Private utility methods ***************************************** */
+
+    private List<ArgumentMatch> getArgument(@NonNull final String argument) {
+        if (argument.equals(GNU_PREFIX) || argument.equals(POSIX_PREFIX)) {
+            return Collections.singletonList(new ArgumentMatch(argument, null));
+        } else if (argument.startsWith(GNU_PREFIX)) {
+            final String longOption = argument.substring(GNU_PREFIX.length());
+            final OptionalArgument<?> optionalArgument = longOptions.get(longOption);
+
+            return Collections.singletonList(new ArgumentMatch(argument, optionalArgument));
+        } else if (argument.startsWith(POSIX_PREFIX)) {
+            final String flags = argument.substring(POSIX_PREFIX.length());
+            final List<ArgumentMatch> matchedShortOptions = new ArrayList<>(flags.length());
+
+            for (final char flag : flags.toCharArray()) {
+                final OptionalArgument<?> optionalArgument = shortOptions.get(flag);
+
+                matchedShortOptions.add(new ArgumentMatch("-" + flag, optionalArgument));
+            }
+
+            return matchedShortOptions;
+        } else {
+            return Collections.emptyList();
+        }
+    }
 
     /**
      * Check if the internal is valid.
@@ -317,8 +365,8 @@ public final class Command {
             }
         }
 
-        for (final String argument : positionalArguments.keySet()) {
-            if (!commandEvent.events().containsKey(argument)) {
+        for (final PositionalArgument<?> argument : positionalArguments) {
+            if (!commandEvent.events().containsKey(argument.getName())) {
                 log.debug("Command internal does not contain required positional argument {}", argument);
 
                 return false;

@@ -16,6 +16,7 @@ import tech.ixirsii.parse.parser.Parser;
  * @param <T> Argument type.
  * @since 1.0.0
  */
+@Getter(AccessLevel.PACKAGE)
 @RequiredArgsConstructor
 @Slf4j
 public abstract sealed class Argument<T> implements Comparable<Argument<T>>
@@ -28,14 +29,12 @@ public abstract sealed class Argument<T> implements Comparable<Argument<T>>
     /**
      * About message for help text.
      */
-    @Getter(AccessLevel.PACKAGE)
     @NonNull
     private final String about;
     /**
      * Argument name.
      */
     @NonNull
-    @Getter(AccessLevel.PACKAGE)
     private final String name;
     /**
      * Function which parses argument strings into values.
@@ -43,7 +42,17 @@ public abstract sealed class Argument<T> implements Comparable<Argument<T>>
     @NonNull
     private final Parser<T> parser;
 
-    /* ******************************************** Override methods ******************************************** */
+    /* *************************************** Protected abstract methods *************************************** */
+
+    /**
+     * How many values does this argument accept?
+     *
+     * @return Argument value count.
+     */
+    @NonNull
+    protected abstract ArgumentValueCount getValueCount();
+
+    /* **************************************** Public override methods ***************************************** */
 
     @Override
     public int compareTo(@NonNull final Argument<T> other) {
@@ -61,10 +70,10 @@ public abstract sealed class Argument<T> implements Comparable<Argument<T>>
 
     @Override
     public int hashCode() {
-        return getName().hashCode();
+        return name.hashCode();
     }
 
-    /* *************************************** Protected utility methods **************************************** */
+    /* **************************************** Default utility methods ***************************************** */
 
     /**
      * Get space between option and help text.
@@ -72,7 +81,7 @@ public abstract sealed class Argument<T> implements Comparable<Argument<T>>
      * @param length How long the option text is.
      * @return Space between the option name and help text.
      */
-    protected String getSpace(final int length) {
+    /* default */ String getSpace(final int length) {
         final int spaceLength = COLUMN_WIDTH - length;
 
         log.trace("Getting space {}", spaceLength);
@@ -92,7 +101,7 @@ public abstract sealed class Argument<T> implements Comparable<Argument<T>>
      * @param value Argument value.
      * @return New argument internal.
      */
-    protected ArgumentEvent<T> parse(@NonNull final String name, @NonNull final String value) {
+    /* default */ ArgumentEvent<T> parse(@NonNull final String name, @NonNull final String value) {
         log.trace("Parsing {}={}", name, value);
 
         final ParseResult<T> result = parser.parse(value);
